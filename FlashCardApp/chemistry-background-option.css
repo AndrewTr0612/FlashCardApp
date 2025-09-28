@@ -1,0 +1,23 @@
+/* Alternative background option - use this if you add an image to public/ folder */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: 
+    linear-gradient(135deg, rgba(30, 60, 114, 0.8) 0%, rgba(42, 82, 152, 0.8) 100%),
+    url('./chemistry-bg.jpg') center/cover no-repeat fixed;
+  min-height: 100vh;
+  color: #333;
+}
+
+/* If you want the image to be less dominant, you can adjust the opacity */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('./chemistry-bg.jpg') center/cover no-repeat;
+  opacity: 0.3;
+  z-index: -1;
+}

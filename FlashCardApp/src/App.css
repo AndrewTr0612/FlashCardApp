@@ -9,9 +9,49 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: 
+    linear-gradient(135deg, rgba(30, 60, 114, 0.7) 0%, rgba(42, 82, 152, 0.8) 100%),
+    url('/image-20160510-20731-1pf8nwv.avif') center/cover no-repeat fixed;
   min-height: 100vh;
   color: #333;
+  position: relative;
+}
+
+/* Add a subtle overlay effect */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(108, 92, 231, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+  animation: backgroundPulse 15s ease-in-out infinite;
+}
+
+@keyframes backgroundPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%, 100% 100%, -100% -100%, 100% 100%;
+  }
 }
 
 #root {
@@ -38,20 +78,26 @@ body {
   text-align: center;
   margin-bottom: 2rem;
   padding: 2rem 0;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  margin: 0 1rem 2rem 1rem;
 }
 
 .app-header h1 {
   color: white;
   font-size: 3rem;
   font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
   margin-bottom: 0.5rem;
 }
 
 .app-header p {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
   font-size: 1.2rem;
   font-weight: 300;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 /* Footer Styles */
@@ -96,52 +142,67 @@ body {
 /* ==========================================
    FLASHCARD FLIP ANIMATION SECTION
    ========================================== */
-.flashcard {
+/* The flip card container - set the width and height to whatever you want. 
+   We have added the border property to demonstrate that the flip itself goes 
+   out of the box on hover (remove perspective if you don't want the 3D effect) */
+.flip-card {
+  background-color: transparent;
   width: 100%;
-  max-width: 500px;
-  height: 350px;
-  position: relative;
-  perspective: 1000px;
+  max-width: 600px;
+  height: 280px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  perspective: 1000px; /* Remove this if you don't want the 3D effect */
   margin: 2rem auto;
+  border-radius: 15px;
 }
 
-/* Card flip animation trigger */
-.flashcard.flipped .card-front {
-  transform: rotateY(-180deg);
+/* This container is needed to position the front and back side */
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
 }
 
-.flashcard.flipped .card-back {
-  transform: rotateY(0deg);
+/* Flip when the card has the 'flipped' class */
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
 }
 
-/* Common styles for both card sides */
-.card-front,
-.card-back {
+/* Position the front and back side */
+.flip-card-front, .flip-card-back {
   position: absolute;
   width: 100%;
   height: 100%;
+  -webkit-backface-visibility: hidden; /* Safari */
   backface-visibility: hidden;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.6s ease-in-out;
   cursor: pointer;
 }
 
-/* Front of card (Question) */
-.card-front {
-  background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
-  transform: rotateY(0deg);
-  border: 3px solid rgba(102, 126, 234, 0.3);
+/* Style the front side (fallback if image is missing) */
+.flip-card-front {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 255, 0.95) 100%);
+  color: #1a1a1a;
+  border: 3px solid rgba(102, 126, 234, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
-/* Back of card (Answer) */
-.card-back {
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8f2ff 100%);
+/* Style the back side */
+.flip-card-back {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+  color: #ffffff;
   transform: rotateY(180deg);
-  border: 3px solid rgba(118, 75, 162, 0.3);
+  border: 3px solid rgba(118, 75, 162, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 /* Content inside cards */
@@ -159,25 +220,33 @@ body {
 .card-content h2 {
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
-  color: #444;
+  color: inherit;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-weight: 600;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .card-content p {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #555;
+  color: inherit;
   margin-bottom: 1rem;
   text-align: center;
+  font-weight: 500;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
 .flip-hint {
   font-size: 0.85rem;
-  color: #888;
+  color: rgba(0, 0, 0, 0.6);
   font-style: italic;
   margin-top: auto;
+}
+
+/* Override flip-hint color for back card */
+.flip-card-back .flip-hint {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ==========================================
@@ -192,28 +261,28 @@ body {
   width: 100%;
 }
 
-/* Flip Button */
-.flip-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Instructions Section */
+.instructions {
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: none;
   padding: 1rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  min-width: 200px;
+  border-radius: 30px;
+  text-align: center;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.flip-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.instructions p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.4;
 }
 
-.flip-btn:active {
-  transform: translateY(0px);
+.instructions strong {
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 /* Navigation Buttons Container */
@@ -286,8 +355,9 @@ body {
     font-size: 2.5rem;
   }
   
-  .flashcard {
-    height: 300px;
+  .flip-card {
+    max-width: 500px;
+    height: 250px;
   }
   
   .card-content {
@@ -321,8 +391,9 @@ body {
     font-size: 1rem;
   }
   
-  .flashcard {
-    height: 250px;
+  .flip-card {
+    max-width: 400px;
+    height: 220px;
   }
   
   .card-content {
@@ -338,10 +409,9 @@ body {
     font-size: 0.95rem;
   }
   
-  .flip-btn {
+  .instructions {
     padding: 0.8rem 1.5rem;
-    font-size: 1rem;
-    min-width: 180px;
+    font-size: 0.9rem;
   }
   
   .navigation {
