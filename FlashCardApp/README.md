@@ -41,7 +41,8 @@ The following **additional** features are implemented:
 
 Here's a walkthrough of implemented required features:
 
-<img src='http://i.imgur.com/link/to/your/gif/file.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
+<img src='![Kapture 2025-09-28 at 14 34 57](https://github.com/user-attachments/assets/99aa5f4a-637d-49ea-ad91-fff08c8e0899)
+' title='Video Walkthrough' width='' alt='Video Walkthrough' />
 
 <!-- Replace this with whatever GIF tool you used! -->
 GIF created with ...  
