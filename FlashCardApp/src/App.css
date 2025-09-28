@@ -325,6 +325,18 @@ body::before {
   border-color: #667eea;
 }
 
+/* Reset button styling */
+.reset-btn {
+  background: #e74c3c;
+  color: white;
+  border: 2px solid #e74c3c;
+}
+
+.reset-btn:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
 /* ==========================================
    PROGRESS BAR SECTION
    ========================================== */

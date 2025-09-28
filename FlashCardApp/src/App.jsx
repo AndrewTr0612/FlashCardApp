@@ -10,6 +10,12 @@ function App() {
   
   // Track whether the current card is flipped (showing answer)
   const [isFlipped, setIsFlipped] = useState(false)
+  
+  // Track previously shown cards to avoid immediate repeats
+  const [previousCards, setPreviousCards] = useState([0])
+  
+  // Track which questions have been viewed (for progress)
+  const [viewedQuestions, setViewedQuestions] = useState(new Set([0]))
 
   // ==========================================
   // FLASHCARD DATA SECTION
@@ -76,29 +82,75 @@ function App() {
   // EVENT HANDLER FUNCTIONS SECTION
   // ==========================================
   
+  // Generate random card index that's different from current card
+  const getRandomCardIndex = () => {
+    if (flashcards.length <= 1) return 0;
+    
+    let randomIndex;
+    let attempts = 0;
+    const maxAttempts = 50; // Prevent infinite loop
+    
+    do {
+      randomIndex = Math.floor(Math.random() * flashcards.length);
+      attempts++;
+    } while (randomIndex === currentCardIndex && attempts < maxAttempts);
+    
+    return randomIndex;
+  }
+  
   // Handle card flip animation (show/hide answer)
   const handleFlip = () => {
     setIsFlipped(!isFlipped)
   }
   
-  // Navigate to next card
+  // Navigate to random next card
   const handleNextCard = () => {
     // Reset flip state when changing cards
     setIsFlipped(false)
-    // Move to next card, loop back to first if at end
-    setCurrentCardIndex((prevIndex) => 
-      prevIndex === flashcards.length - 1 ? 0 : prevIndex + 1
-    )
+    
+    // Get a random card index
+    const randomIndex = getRandomCardIndex()
+    
+    // Update current card and add to previous cards history
+    setCurrentCardIndex(randomIndex)
+    setPreviousCards(prev => {
+      const newHistory = [randomIndex, ...prev]
+      // Keep only last 3 cards to avoid recent repeats
+      return newHistory.slice(0, 3)
+    })
+    
+    // Mark this question as viewed
+    setViewedQuestions(prev => new Set([...prev, randomIndex]))
   }
 
-  // Navigate to previous card
+  // Navigate to previous card from history
   const handlePrevCard = () => {
     // Reset flip state when changing cards
     setIsFlipped(false)
-    // Move to previous card, loop to last if at beginning
-    setCurrentCardIndex((prevIndex) => 
-      prevIndex === 0 ? flashcards.length - 1 : prevIndex - 1
-    )
+    
+    if (previousCards.length > 1) {
+      // Get the second-to-last card from history
+      const prevIndex = previousCards[1]
+      setCurrentCardIndex(prevIndex)
+      
+      // Remove the current card from history and move to previous
+      setPreviousCards(prev => prev.slice(1))
+    } else {
+      // If no history, just get a random card
+      const randomIndex = getRandomCardIndex()
+      setCurrentCardIndex(randomIndex)
+      
+      // Mark this question as viewed
+      setViewedQuestions(prev => new Set([...prev, randomIndex]))
+    }
+  }
+
+  // Reset progress and start over
+  const handleReset = () => {
+    setCurrentCardIndex(0)
+    setIsFlipped(false)
+    setPreviousCards([0])
+    setViewedQuestions(new Set([0]))
   }
 
   // ==========================================
@@ -117,7 +169,7 @@ function App() {
         
         {/* Card Counter Display */}
         <div className="card-counter">
-          <span>Card {currentCardIndex + 1} of {flashcards.length}</span>
+          <span>🎲 Random Mode | Viewed: {viewedQuestions.size} | Remaining: {flashcards.length - viewedQuestions.size} of {flashcards.length}</span>
         </div>
 
         {/* Flashcard with Click Flip Animation */}
@@ -158,15 +210,24 @@ function App() {
               className="nav-btn prev-btn"
               onClick={handlePrevCard}
             >
-              ⬅️ Previous
+              ↩️ Back
             </button>
             
             <button 
               className="nav-btn next-btn"
               onClick={handleNextCard}
             >
-              Next ➡️
+              🎲 Next
             </button>
+            
+            {viewedQuestions.size === flashcards.length && (
+              <button 
+                className="nav-btn reset-btn"
+                onClick={handleReset}
+              >
+                🔄 Reset
+              </button>
+            )}
           </div>
         </div>
 
@@ -174,7 +235,7 @@ function App() {
         <div className="progress-bar">
           <div 
             className="progress-fill"
-            style={{ width: `${((currentCardIndex + 1) / flashcards.length) * 100}%` }}
+            style={{ width: `${(viewedQuestions.size / flashcards.length) * 100}%` }}
           ></div>
         </div>
       </main>
