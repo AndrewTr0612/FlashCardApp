@@ -11,8 +11,14 @@ function App() {
   // Track whether the current card is flipped (showing answer)
   const [isFlipped, setIsFlipped] = useState(false)
   
-  // Track previously shown cards to avoid immediate repeats
-  const [previousCards, setPreviousCards] = useState([0])
+  // Track user's guess input
+  const [userGuess, setUserGuess] = useState('')
+  
+  // Track if the guess has been submitted
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  
+  // Track if the guess is correct
+  const [isCorrect, setIsCorrect] = useState(false)
   
   // Track which questions have been viewed (for progress)
   const [viewedQuestions, setViewedQuestions] = useState(new Set([0]))
@@ -82,168 +88,215 @@ function App() {
   // EVENT HANDLER FUNCTIONS SECTION
   // ==========================================
   
-  // Generate random card index that's different from current card
-  const getRandomCardIndex = () => {
-    if (flashcards.length <= 1) return 0;
+  // Handle guess submission
+  const handleSubmitGuess = () => {
+    if (userGuess.trim() === '') return
     
-    let randomIndex;
-    let attempts = 0;
-    const maxAttempts = 50; // Prevent infinite loop
+    // Simple answer checking (case-insensitive, basic matching)
+    const correctAnswer = currentCard.answer.toLowerCase()
+    const guess = userGuess.toLowerCase().trim()
     
-    do {
-      randomIndex = Math.floor(Math.random() * flashcards.length);
-      attempts++;
-    } while (randomIndex === currentCardIndex && attempts < maxAttempts);
+    // Check if guess contains key words from the answer
+    const isAnswerCorrect = checkAnswer(guess, correctAnswer, currentCard.id)
     
-    return randomIndex;
+    setIsCorrect(isAnswerCorrect)
+    setHasSubmitted(true)
+    setIsFlipped(true)
   }
   
-  // Handle card flip animation (show/hide answer)
+  // Simple answer checking function
+  const checkAnswer = (guess, correctAnswer, cardId) => {
+    // Define expected answers for each card
+    const expectedAnswers = {
+      1: ['6', 'six'], // Carbon atomic number
+      2: ['h2o', 'water'], // Water formula
+      3: ['6.022', '6.022 × 10²³', '6.022e23', 'avogadro'], // Avogadro's number
+      4: ['acid', 'base', 'h+', 'oh-', 'ph'], // Acid/base
+      5: ['ionic', 'electron transfer', 'metal', 'nonmetal'], // Ionic bond
+      6: ['decreases', 'increases', 'smaller', 'larger'], // Atomic radius
+      7: ['oxidation', 'reduction', 'electrons', 'oil rig'], // Redox
+      8: ['pv = nrt', 'pv=nrt', 'ideal gas'], // Gas law
+      9: ['ionic', 'covalent', 'metallic'], // Bonding types
+      10: ['molarity', 'moles', 'liters', 'm ='] // Molarity
+    }
+    
+    const validAnswers = expectedAnswers[cardId] || []
+    return validAnswers.some(answer => guess.includes(answer))
+  }
+  
+  // Handle card flip - allow flipping at any time
   const handleFlip = () => {
     setIsFlipped(!isFlipped)
   }
   
-  // Navigate to random next card
+  // Navigate to next card (ordered sequence)
   const handleNextCard = () => {
-    // Reset flip state when changing cards
-    setIsFlipped(false)
-    
-    // Get a random card index
-    const randomIndex = getRandomCardIndex()
-    
-    // Update current card and add to previous cards history
-    setCurrentCardIndex(randomIndex)
-    setPreviousCards(prev => {
-      const newHistory = [randomIndex, ...prev]
-      // Keep only last 3 cards to avoid recent repeats
-      return newHistory.slice(0, 3)
-    })
-    
-    // Mark this question as viewed
-    setViewedQuestions(prev => new Set([...prev, randomIndex]))
-  }
-
-  // Navigate to previous card from history
-  const handlePrevCard = () => {
-    // Reset flip state when changing cards
-    setIsFlipped(false)
-    
-    if (previousCards.length > 1) {
-      // Get the second-to-last card from history
-      const prevIndex = previousCards[1]
-      setCurrentCardIndex(prevIndex)
-      
-      // Remove the current card from history and move to previous
-      setPreviousCards(prev => prev.slice(1))
-    } else {
-      // If no history, just get a random card
-      const randomIndex = getRandomCardIndex()
-      setCurrentCardIndex(randomIndex)
-      
-      // Mark this question as viewed
-      setViewedQuestions(prev => new Set([...prev, randomIndex]))
+    if (currentCardIndex < flashcards.length - 1) {
+      const nextIndex = currentCardIndex + 1
+      setCurrentCardIndex(nextIndex)
+      setViewedQuestions(prev => new Set([...prev, nextIndex]))
+      resetCardState()
     }
   }
 
-  // Reset progress and start over
+  // Navigate to previous card (ordered sequence)
+  const handlePrevCard = () => {
+    if (currentCardIndex > 0) {
+      const prevIndex = currentCardIndex - 1
+      setCurrentCardIndex(prevIndex)
+      resetCardState()
+    }
+  }
+  
+  // Reset card state when navigating
+  const resetCardState = () => {
+    setIsFlipped(false)
+    setUserGuess('')
+    setHasSubmitted(false)
+    setIsCorrect(false)
+  }
+
+  // Reset entire progress
   const handleReset = () => {
     setCurrentCardIndex(0)
-    setIsFlipped(false)
-    setPreviousCards([0])
     setViewedQuestions(new Set([0]))
+    resetCardState()
+  }
+  
+  // Handle input change
+  const handleInputChange = (e) => {
+    setUserGuess(e.target.value)
   }
 
   // ==========================================
   // COMPONENT RENDER SECTION
   // ==========================================
   return (
-    <div className="app">
+    <div className="App">
       {/* Header Section */}
-      <header className="app-header">
-        <h1>� Chemistry Study App</h1>
-        <p>Master chemistry concepts with interactive flashcards</p>
-      </header>
-
-      {/* Main Flashcard Section */}
-      <main className="flashcard-container">
-        
-        {/* Card Counter Display */}
-        <div className="card-counter">
-          <span>🎲 Random Mode | Viewed: {viewedQuestions.size} | Remaining: {flashcards.length - viewedQuestions.size} of {flashcards.length}</span>
-        </div>
-
-        {/* Flashcard with Click Flip Animation */}
-        <div className={`flip-card ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
-          <div className="flip-card-inner">
-            
-            {/* Front of Card (Question) */}
-            <div className="flip-card-front">
-              <div className="card-content">
-                <h2>Question</h2>
-                <p>{currentCard.question}</p>
-                <div className="flip-hint">Click to reveal answer</div>
-              </div>
-            </div>
-
-            {/* Back of Card (Answer) */}
-            <div className="flip-card-back">
-              <div className="card-content">
-                <h2>Answer</h2>
-                <p>{currentCard.answer}</p>
-                <div className="flip-hint">Click to see question</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Control Buttons Section */}
-        <div className="controls">
-          
-          {/* Instructions */}
-          <div className="instructions">
-            <p>💡 <strong>Click on the card</strong> to flip and see the answer!</p>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="navigation">
-            <button 
-              className="nav-btn prev-btn"
-              onClick={handlePrevCard}
-            >
-              ↩️ Back
-            </button>
-            
-            <button 
-              className="nav-btn next-btn"
-              onClick={handleNextCard}
-            >
-              🎲 Next
-            </button>
-            
-            {viewedQuestions.size === flashcards.length && (
-              <button 
-                className="nav-btn reset-btn"
-                onClick={handleReset}
-              >
-                🔄 Reset
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Progress Bar Section */}
+      <h1>Chemistry Flashcards</h1>
+      
+      {/* Progress Section */}
+      <div className="progress-container">
         <div className="progress-bar">
           <div 
-            className="progress-fill"
-            style={{ width: `${(viewedQuestions.size / flashcards.length) * 100}%` }}
+            className="progress-fill" 
+            style={{
+              width: `${(viewedQuestions.size / flashcards.length) * 100}%`
+            }}
           ></div>
         </div>
-      </main>
-
-      {/* Footer Section */}
-      <footer className="app-footer">
-        <p>Built with React + Vite | Master chemistry, one card at a time! ⚗️</p>
-      </footer>
+        <div className="progress-text">
+          Progress: {viewedQuestions.size} / {flashcards.length}
+        </div>
+      </div>
+      
+      {/* Flashcard Section */}
+      <div className="flashcard-container">
+        <div 
+          className={`flip-card ${isFlipped ? 'flipped' : ''}`}
+          onClick={handleFlip}
+        >
+          <div className="flip-card-inner">
+            {/* Front Face */}
+            <div className="flip-card-front">
+              <div className="card-number">
+                Question {currentCardIndex + 1} of {flashcards.length}
+              </div>
+              <div className="question">
+                {currentCard.question}
+              </div>
+              {!hasSubmitted && (
+                <div className="hint">
+                  💡 Click the card to see the answer or enter your guess below!
+                </div>
+              )}
+            </div>
+            
+            {/* Back Face */}
+            <div className="flip-card-back">
+              <div className="card-number">
+                Answer {currentCardIndex + 1} of {flashcards.length}
+              </div>
+              <div className="answer">
+                {currentCard.answer}
+              </div>
+              {hasSubmitted && (
+                <div className="result-message">
+                  Your guess: "{userGuess}"
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Guess Input Section - Now Below Flashcard */}
+      <div className="guess-container">
+        <div className="input-group">
+          <input
+            type="text"
+            value={userGuess}
+            onChange={handleInputChange}
+            placeholder="Enter your answer..."
+            disabled={hasSubmitted}
+            className={`guess-input ${hasSubmitted ? 'disabled' : ''}`}
+          />
+          <button 
+            onClick={handleSubmitGuess}
+            disabled={hasSubmitted || userGuess.trim() === ''}
+            className={`submit-btn ${hasSubmitted ? 'disabled' : ''}`}
+          >
+            Submit
+          </button>
+        </div>
+        
+        {/* Feedback Display */}
+        {hasSubmitted && (
+          <div className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}>
+            {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+          </div>
+        )}
+      </div>
+      
+      {/* Navigation Section */}
+      <div className="navigation">
+        <button 
+          onClick={handlePrevCard}
+          disabled={currentCardIndex === 0}
+          className={`nav-btn prev-btn ${currentCardIndex === 0 ? 'disabled' : ''}`}
+        >
+          ← Previous
+        </button>
+        
+        <button 
+          onClick={handleReset}
+          className="reset-btn"
+        >
+          Reset Progress
+        </button>
+        
+        <button 
+          onClick={handleNextCard}
+          disabled={currentCardIndex === flashcards.length - 1}
+          className={`nav-btn next-btn ${currentCardIndex === flashcards.length - 1 ? 'disabled' : ''}`}
+        >
+          Next →
+        </button>
+      </div>
+      
+      {/* Navigation Status */}
+      <div className="nav-status">
+        {currentCardIndex === 0 && (
+          <span className="status-text">You're at the first card</span>
+        )}
+        {currentCardIndex === flashcards.length - 1 && (
+          <span className="status-text">You've reached the last card</span>
+        )}
+        {currentCardIndex > 0 && currentCardIndex < flashcards.length - 1 && (
+          <span className="status-text">Card {currentCardIndex + 1} of {flashcards.length}</span>
+        )}
+      </div>
     </div>
   )
 }
